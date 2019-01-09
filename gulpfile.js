@@ -7,6 +7,7 @@ const gulpBabel = require('gulp-babel');
 const gulpBrotli = require('gulp-brotli');
 const gulpGzip = require('gulp-gzip');
 const gulpRename = require('gulp-rename');
+const gulpSourcemaps = require('gulp-sourcemaps');
 const gulpTape = require('gulp-tape');
 const gulpTerser = require('gulp-terser');
 const gulpZopfliGreen = require('gulp-zopfli-green');
@@ -45,7 +46,11 @@ function onError(e) {
     this.emit('end');
 }
 
-const babelModern = (stream) => {
+const babelModern = (stream, sourceMaps) => {
+    if (sourceMaps) {
+        stream = stream.pipe(gulpSourcemaps.init());
+    }
+
     stream = stream.pipe(gulpBabel({
         presets: [
             ['@babel/env', {
@@ -59,6 +64,10 @@ const babelModern = (stream) => {
         ],
     }));
     stream = stream.on('error', onError);
+
+    if (sourceMaps) {
+        stream = stream.pipe(gulpSourcemaps.write());
+    }
 
     return stream;
 };
@@ -103,7 +112,7 @@ const js = (options) => {
             mangle: {
                 toplevel: true,
                 properties: {
-                    regex: /_\w+/, // Compress all properties that start with _
+                    regex: /_\w+/, // Compress all properties that start with _, but contain more than just an underscore
                 },
             },
             compress: {
@@ -156,9 +165,11 @@ gulp.task('clear-browser', () => {
 // });
 
 gulp.task('test-browser-js-tests', () => {
+    const sourceMaps = false;
+
     var b = browserify({
         entries: testEntry,
-        debug: false,
+        debug: sourceMaps,
     });
     b.transform('babelify', {
         plugins: [
@@ -172,7 +183,7 @@ gulp.task('test-browser-js-tests', () => {
     stream = stream.pipe(vinylSourceStream('tests.js'));
     stream = stream.pipe(vinylBuffer());
     stream = stream.on('error', onError);
-    stream = babelModern(stream);
+    stream = babelModern(stream, sourceMaps);
     stream = stream.pipe(gulp.dest(browserOutputPath));
 
     return stream;

@@ -4,6 +4,8 @@ require('/tests/FeatureTests/ArrayBuffer.js');
 require('/tests/FeatureTests/AsyncForm.js');
 require('/tests/FeatureTests/AvoidStoringBuiltInSymbols.js');
 require('/tests/FeatureTests/BigInt.js');
+require('/tests/FeatureTests/BigInt64Array.js');
+require('/tests/FeatureTests/BigUint64Array.js');
 require('/tests/FeatureTests/Blob.js');
 require('/tests/FeatureTests/Boolean.js');
 require('/tests/FeatureTests/Date.js');
@@ -46,7 +48,6 @@ require('/tests/FeatureTests/UnknownPointerKey.js');
 require('/tests/FeatureTests/UnsupportedTypes.js');
 require('/tests/FeatureTests/WeakMap.js');
 require('/tests/FeatureTests/WeakSet.js');
-
 
 // const jsonComplete = require('/main.js');
 

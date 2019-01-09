@@ -1,6 +1,6 @@
 # json-complete
 
-json-complete can turn almost any standard JavaScript data object or value into a JSON-compatible serialized form, and back again. It supports Dates, RegExp, Symbols, Sets, Maps, BigInts, Blobs, and most other built-in JavaScript types! It preserves internal referential integrity, handles circular references, handles arbitrarily deep nesting, and it cannot cause data collisions. json-complete has no dependencies and is less than 3KB when min-zipped. json-complete is distributed with both ES Module and CommonJS support.
+json-complete can turn almost any standard JavaScript data object or value into a JSON-compatible serialized form, and back again. It supports Dates, RegExp, Symbols, Sets, Maps, BigInts, Blobs, and most other built-in JavaScript types! It preserves internal referential integrity, handles circular references, handles arbitrarily deep nesting, and it cannot cause data collisions. json-complete has no dependencies and is less than 3.5KB when min-zipped. json-complete is distributed with both ES Module and CommonJS support.
 
 
 
@@ -26,8 +26,8 @@ jsonComplete.encode(value, [options={}]);
 
 * `value` - (any type) Some value to encode.
 * `options` - (Object) Optional. Option definitions:
-  - `options.compat` - (truthy or falsy) Optional. Makes the encoder more forgiving of unknown or incompatible Types. See **Option: Compat Mode** below.
-  - `options.encodeSymbolKeys` - (truthy or falsy) Optional. Turns on the encoder's ability to encode Symbol keys on Types, at the cost of lost information. See **Option: Symbol Key Encoding** below.
+  - `options.compat` - (truthy or falsy) Optional. Makes the encoder more forgiving of unknown or incompatible Types, at the cost of lost information. See **Option: Compat Mode** below.
+  - `options.encodeSymbolKeys` - (truthy or falsy) Optional. Turns on the encoder's ability to encode Symbol keys on Types See **Option: Symbol Key Encoding** below.
   - `options.onFinish` - (Function) Optional, except when using a Deferred Type. If specified, the encoder will call the provided function with the encoded String as an argument, rather than returning it from the `encode` function. This option can be useful for creating a Promise-based wrapper. This option is **required** if the `value` contains a Deferred Type, since Deferred Types cannot be synchronously encoded.
 * *return value* - (String) - The encoded String form of `value`. If `options.onFinish` is specified, the return value is `undefined`.
 
@@ -62,7 +62,7 @@ input.circular = input;
 
 var encoded = jsonComplete.encode(input);
 console.log(encoded);
-// [["Ob",[[["St0","St1","St2","St3","St4"],["Nu0","Bi0","Ob0","Na","Se0"]]]],["St",["a","b","circular","nan","set"]],["Nu",["1","2","3"]],["Bi",["81129638414606663681390495662081"]],["Se",[[["Nu0","Nu1","Nu2"]]]],["r","Ob0"],["v","1.0.0"]]
+// ["O0","2.0.0",["O","S0S1S2S3S4 N0_0O0C0U0"],["S",["a","b","circular","nan","set"]],["N","1,2,3"],["_","81129638414606663681390495662081"],["U","N0N1N2"]]
 
 console.log(jsonComplete.decode(encoded));
 // Exact same structure and value as input
@@ -79,7 +79,7 @@ var input = false;
 
 var encoded = jsonComplete.encode(input);
 console.log(encoded);
-// [["r","fa"],["v","1.0.0"]]
+// ["F","2.0.0"]
 
 console.log(jsonComplete.decode(encoded));
 // false
@@ -101,7 +101,7 @@ var encodedWithSymbolKeys = jsonComplete.encode(input, {
     encodeSymbolKeys: true,
 });
 console.log(encodedWithSymbolKeys);
-// [["Ob",[[["St0","Sy0"],["Nu0","Nu1"]]]],["St",["a"]],["Sy",[" "]],["Nu",["1","2"]],["r","Ob0"],["v","1.0.0"]]
+// ["O0","2.0.0",["O","S0P0 N0N1"],["S",["a"]],["P",["s"]],["N","1,2"]]
 
 var decodeWithSymbolKeys = jsonComplete.decode(encodedWithSymbolKeys);
 console.log(decodeWithSymbolKeys);
@@ -109,7 +109,7 @@ console.log(decodeWithSymbolKeys);
 
 var encoded = jsonComplete.encode(input);
 console.log(encoded);
-// [["Ob",[[["St0"],["Nu0"]]]],["St",["a"]],["Nu",["1"]],["r","Ob0"],["v","1.0.0"]]
+// ["O0","2.0.0",["O","S0 N0"],["S",["a"]],["N","1"]]
 
 console.log(jsonComplete.decode(encoded));
 // {a: 1}
@@ -129,7 +129,7 @@ var encoded = jsonComplete.encode(badIdea, {
     compat: true,
 });
 console.log(encoded);
-// [["Ob",[[["St0"],["fa"]]]],["St",["a"]],["r","Ob0"],["v","1.0.0"]]
+// ["O0","2.0.0",["O","S0 F0"],["S",["a"]]]
 // Because compat mode was used, the Math object is encoded as an empty object
 
 console.log(jsonComplete.decode(encoded));
@@ -148,7 +148,7 @@ var input = [new Blob(['data'], { type: 'application/json' }), 1];
 var encoded = jsonComplete.encode(input, {
     onFinish: function(encoded) {
         console.log(encoded);
-        // [["Ar",[[["Bl0","Nu0"]]]],["Bl",[[["U10","St0"]]]],["Nu",["1","100","97","116"]],["St",["application/json"]],["U1",[[["Nu1","Nu2","Nu3","Nu2"]]]],["r","Ar0"],["v","1.0.0"]]
+        // ["A0","2.0.0",["A","Y0N0"],["Y","$0S0"],["N","1,100,97,116"],["S",["application/json"]],["$","N1N2N3N2"]]
 
         console.log(jsonComplete.decode(encoded));
         // [(BLOB: content is "data", type is "application/json"), 1]
@@ -170,7 +170,7 @@ var encoded = jsonComplete.encode(input, {
     compat: true,
 });
 console.log(encoded);
-// [["Ar",[[["Bl0","Nu0"]]]],["Bl",[[["un","St0"]]]],["Nu",["1"]],["St",["application/json"]],["r","Ar0"],["v","1.0.0"]]
+// ["A0","2.0.0",["A","Y0N0"],["Y","K0S0"],["N","1"],["S",["application/json"]]]
 // [(BLOB: content is empty, type is "application/json"), 1]
 ```
 
@@ -224,6 +224,8 @@ console.log(encoded);
 | ❌     | ✅ `3`         | Blob                                                 |
 | ❌     | ✅ `3`         | File                                                 |
 | ❌     | ✅             | BigInt                                               |
+| ❌     | ✅             | BigInt64Array                                        |
+| ❌     | ✅             | BigUint64Array                                       |
 
 * `1` - JSON will encode sparse Arrays by injecting null values into the unassigned indices.
 * `2` - JSON will encode Arguments Objects as an Object where the indices are converted to String keys, and will not retain other non-integer keys.
@@ -328,18 +330,18 @@ On the other hand, Symbols stored in value positions, not key positions, will no
 
 | Compression | ES Module  | CommonJS |
 |-------------|------------|----------|
-| Minified    | 7343 bytes | 8396 bytes |
-| gzip        | 2924 bytes | 2947 bytes |
-| zopfli      | 2871 bytes | 2895 bytes |
-| brotli      | 2681 bytes | 2706 bytes |
+| Minified    | 8362 bytes | 9522 bytes |
+| gzip        | 3318 bytes | 3328 bytes |
+| zopfli      | 3250 bytes | 3262 bytes |
+| brotli      | 3006 bytes | 3025 bytes |
 
 
 
 ## Tests
 
-There are currently 670 tests, constituting 100% code coverage across all platforms.
+There are currently 699 tests, constituting 100% code coverage across all platforms.
 
-Only Google Chrome is currently able to run all of them due to differences in Type support across various browser and Node platforms.
+Only Google Chrome is currently able to run all of the tests due to differences in Type support across various browser and Node platforms.
 
 The library and all its supportable tests have been tested on:
 
@@ -347,7 +349,7 @@ The library and all its supportable tests have been tested on:
 * Firefox
 * Safari (Desktop)
 * Edge (17)
-* Node (8.11.3)
+* Node (11.4.0)
 
 
 
@@ -355,7 +357,11 @@ The library and all its supportable tests have been tested on:
 
 #### Relative JSON Size
 
-In very unscientific testing, for a large, non-circular object, the output length of both the JSON encoded string and the json-complete encoded string were compared. The json-complete string was approximately 25% larger than the JSON string.
+In very unscientific testing, for a large, non-circular object [generated here](https://www.json-generator.com/), the output length of both the JSON encoded string and the json-complete encoded string were compared. The json-complete string was actually 18% smaller than the JSON string. The reduction almost certainly has to do with string and number deduplication. Indeed, when gzipping both outputs, the json-complete output became 8% larger. Thus, roughly speaking, the absolute cost of storing referencial data in addition to the information content is about 8%.
+
+For a much smaller object, with less duplication of data, the resulting comparion saw the json-complete encoded file being about 15% larger than the equivalent JSON string. When gzipped, the difference remained about the same.
+
+In conclusion, the relative size of a json-complete string, with all it's additional data and support, is roughly equivalent to a JSON string with the same data. Some types of data will be more or less efficient, mileage will vary. However, expect to have an overhead of about 8% if gzipping json-complete data versus JSON data.
 
 
 #### Unsupported Types
@@ -392,7 +398,7 @@ In an extremely rare edge case, which should be avoided, built-in Symbols can be
 
 #### Microsoft Edge Limitations
 
-Some versions of Microsoft Edge prior to version 18 can support Symbols and Map. However, they have a race condition of some sort that can sometimes allow Symbols used as Object keys to be duplicated in the references Map. A special test is performed to detect this, and if such an issue is detected, the library will fall back to a list-based implementation, rather than using native Map.
+Some versions of Microsoft Edge prior to version 18 can support Symbols and Map. However, they have a race condition of some sort that can sometimes allow Symbols used as Object keys to be duplicated in an ES2015 Map collection. A special test is performed to detect this, and if such an issue is detected, the library will fall back to a list-based implementation, rather than using native ES2015 Map.
 
 Microsoft Edge supports File types, but does not support the File constructor. If attempting to decode an encoded File object, json-complete will throw. However, in compat mode, the data will be decoded as a Blob type with `lastModified` and `name` properties added as normal properties.
 
@@ -504,7 +510,7 @@ Not yet supported.
 
 
 ## Future Plans
-- [ ] Add support for BigInt64Array and BigUint64Array.
+- [x] Add support for BigInt64Array and BigUint64Array.
 - [ ] Write node helpers that will translate to and from Blob/File types using Buffer and object data.
 - [ ] Split out and add if checks around Arbitrary Attached Data tests that use symbols.
 - [ ] Support IE11
@@ -515,6 +521,8 @@ Not yet supported.
 - [ ] Support IE7 with legacy version
 - [ ] Support IE6 with legacy version
 - [ ] Create Promise wrapper so the asynchronous form can be used with Promises or await.
-- [ ] Explore String compressed form for internal arrays.
+- [x] Explore String compressed form for internal arrays.
 - [ ] Move tests to [BrowserStack](https://www.browserstack.com/) to provide more coverage of available environments.
 - [ ] Update library export structure to allow more flexibility to only import the encoder or decoder portions.
+- [ ] Write script that will convert 1.0.0 data to 2.0.0 data.
+- [ ] Write script that will convert 2.0.0 data to 1.0.0 data.
