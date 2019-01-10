@@ -48,11 +48,8 @@ export default (typeObj) => {
                 type: decodePointer(store, dataArray[1]),
             });
         });
-    }
 
-    // Supported back to IE10, but IE10, IE11, and (so far) Edge do not support the File constructor
-    /* istanbul ignore if */
-    if (typeof File === 'function') {
+        // IE10, but IE10, IE11, and (so far) Edge do not support the File constructor, so they will use the fallback in compat mode
         typeObj.Z = genBlobLike('File', ['type', 'name', 'lastModified'], (store, buffer, dataArray) => {
             try {
                 return new File(buffer, decodePointer(store, dataArray[2]), {

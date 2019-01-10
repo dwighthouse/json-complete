@@ -330,16 +330,16 @@ On the other hand, Symbols stored in value positions, not key positions, will no
 
 | Compression | ES Module  | CommonJS |
 |-------------|------------|----------|
-| Minified    | 8362 bytes | 9522 bytes |
-| gzip        | 3318 bytes | 3328 bytes |
-| zopfli      | 3250 bytes | 3262 bytes |
-| brotli      | 3006 bytes | 3025 bytes |
+| Minified    | 8601 bytes | 9755 bytes |
+| gzip        | 3386 bytes | 3395 bytes |
+| zopfli      | 3315 bytes | 3325 bytes |
+| brotli      | 3064 bytes | 3082 bytes |
 
 
 
 ## Tests
 
-There are currently 699 tests, constituting 100% code coverage across all platforms.
+There are currently 728 tests, constituting 100% code coverage across all platforms.
 
 Only Google Chrome is currently able to run all of the tests due to differences in Type support across various browser and Node platforms.
 
@@ -349,6 +349,7 @@ The library and all its supportable tests have been tested on:
 * Firefox
 * Safari (Desktop)
 * Edge (17)
+* Internet Explorer (11)
 * Node (11.4.0)
 
 
@@ -405,7 +406,9 @@ Microsoft Edge supports File types, but does not support the File constructor. I
 
 #### Internet Explorer 11 Limitations
 
-Not yet supported.
+The keys in Maps and the values in Set can support negative zero (-0) as a distinct value separate from 0. This is allowed, but users should be aware of this in case they are also storing a zero value, and then expecting to have two different results when decoding on a more modern browser.
+
+Even though IE11 supports a Map type, it differs slightly from other implementations. To be safe, it is not used internally. As a result, the performance of the encoder can be significantly worse than in other browsers.
 
 
 #### Internet Explorer 10 Limitations
@@ -510,10 +513,14 @@ Not yet supported.
 
 
 ## Future Plans
+- [x] Explore String compressed form for internal arrays.
 - [x] Add support for BigInt64Array and BigUint64Array.
+- [x] Split out and add if checks around Arbitrary Attached Data tests that use symbols.
+- [x] Support IE11
+- [ ] Write script that will convert 1.0.0 data to 2.0.0 data.
+- [ ] Write script that will convert 2.0.0 data to 1.0.0 data.
 - [ ] Write node helpers that will translate to and from Blob/File types using Buffer and object data.
-- [ ] Split out and add if checks around Arbitrary Attached Data tests that use symbols.
-- [ ] Support IE11
+- [ ] Update library export structure to allow more flexibility to only import the encoder or decoder portions.
 - [ ] Support IE10
 - [ ] Support IE9
 - [ ] Legacy version that has no support for Symbol, Keyed Collection Types, Typed Array types, ArrayBuffer, SharedArrayBuffer, Blob, File, or BigInt types and provides its own limited JSON.stringify and JSON.parse just for strings and arrays.
@@ -521,8 +528,4 @@ Not yet supported.
 - [ ] Support IE7 with legacy version
 - [ ] Support IE6 with legacy version
 - [ ] Create Promise wrapper so the asynchronous form can be used with Promises or await.
-- [x] Explore String compressed form for internal arrays.
 - [ ] Move tests to [BrowserStack](https://www.browserstack.com/) to provide more coverage of available environments.
-- [ ] Update library export structure to allow more flexibility to only import the encoder or decoder portions.
-- [ ] Write script that will convert 1.0.0 data to 2.0.0 data.
-- [ ] Write script that will convert 2.0.0 data to 1.0.0 data.

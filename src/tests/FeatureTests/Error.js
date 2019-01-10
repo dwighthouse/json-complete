@@ -1,5 +1,6 @@
 const test = require('tape');
 const testHelpers = require('/tests/testHelpers.js');
+const StandardObjectTests = require('/tests/StandardObjectTests.js');
 const jsonComplete = require('/main.js');
 
 const encode = jsonComplete.encode;
@@ -34,11 +35,13 @@ test('Error: Empty Stack', (t) => {
 
     const value = new Error('a');
 
+    const expectedStackType = value.stack === void 0 ? '[object Undefined]' : '[object String]';
+
     const decoded = decode(encode([value]))[0];
 
     t.ok(decoded instanceof Error);
-    t.equal(testHelpers.systemName(decoded.stack), '[object String]');
-    t.ok(decoded.stack.length > 0);
+    t.equal(testHelpers.systemName(decoded.stack), expectedStackType);
+    t.ok(String(decoded.stack).length > 0);
 });
 
 test('Error: Root Value', (t) => {
@@ -114,74 +117,28 @@ test('Error: URIError', (t) => {
     t.ok(decoded instanceof URIError);
 });
 
-test('Error: Arbitrary Attached Data', (t) => {
-    t.plan(3);
-
-    const value = new Error('a');
-
-    value.x = 2;
-    value[Symbol.for('error')] = 'test';
-
-    const decoded = decode(encode([value], {
-        encodeSymbolKeys: true,
-    }))[0];
-
-    t.ok(decoded instanceof Error);
-    t.equal(decoded.x, 2);
-    t.equal(decoded[Symbol.for('error')], 'test');
-});
-
-test('Error: Self-Containment', (t) => {
-    t.plan(2);
-
-    const value = new Error('a');
-
-    value.me = value;
-
-    const decoded = decode(encode([value]))[0];
-
-    t.ok(decoded instanceof Error);
-    t.equal(decoded.me, decoded);
-});
-
-test('Error: Referential Integrity', (t) => {
-    t.plan(2);
-
-    const source = new Error('a');
-
-    const decoded = decode(encode({
-        x: source,
-        y: source,
-    }));
-
-    t.equal(decoded.x, decoded.y);
-    t.notEqual(decoded.x, source);
+StandardObjectTests('Error', 'Error', () => {
+    return new Error('a');
 });
 
 test('Error: Encoding Expected', (t) => {
     t.plan(1);
 
-    const value = new Error('a');
-    value.a = false;
+    const value = new Error('');
+    value.stack = '';
 
     const encoded = testHelpers.simplifyEncoded(encode(value));
 
-    // Simplify stack for check
-    encoded.S[2] = 'stack!!!';
-
     // Remove extra properties a given browser might have added (namely, Safari)
     delete encoded.N;
-    encoded.S = encoded.S.slice(0, 3);
-    encoded.E = encoded.E.split(' ').map((parts, index) => {
-        return index === 0 ? parts : parts.slice(0, 2);
-    }).join(' ');
+    encoded.S = encoded.S.slice(0, 2);
+    encoded.E = encoded.E.split(' ')[0];
 
     t.deepEqual(encoded, {
-        E: 'S0S1S2 S1 F0',
+        E: 'S0S1S1',
         S: [
             'Error',
-            'a',
-            'stack!!!',
+            '',
         ],
         r: 'E0',
     });

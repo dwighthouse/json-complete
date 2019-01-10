@@ -1,5 +1,6 @@
 const test = require('tape');
 const testHelpers = require('/tests/testHelpers.js');
+const StandardObjectTests = require('/tests/StandardObjectTests.js');
 const jsonComplete = require('/main.js');
 
 const encode = jsonComplete.encode;
@@ -48,44 +49,8 @@ if (typeof BigInt64Array === 'function') {
         t.deepEqual(decode(encode(new BigInt64Array([BigInt(1)]))), new BigInt64Array([BigInt(1)]));
     });
 
-    test('BigInt64Array: Arbitrary Attached Data', (t) => {
-        t.plan(2);
-
-        const a = new BigInt64Array(2);
-        a.x = 2;
-        a[Symbol.for('BigInt64Array')] = 'test';
-
-        const decoded = decode(encode([a], {
-            encodeSymbolKeys: true,
-        }))[0];
-
-        t.equal(decoded.x, 2);
-        t.equal(decoded[Symbol.for('BigInt64Array')], 'test');
-    });
-
-    test('BigInt64Array: Self-Containment', (t) => {
-        t.plan(1);
-
-        const a = new BigInt64Array(2);
-        a.me = a;
-
-        const decoded = decode(encode([a]))[0];
-
-        t.equal(decoded.me, decoded);
-    });
-
-    test('BigInt64Array: Referential Integrity', (t) => {
-        t.plan(2);
-
-        const source = new BigInt64Array(1);
-
-        const decoded = decode(encode({
-            x: source,
-            y: source,
-        }));
-
-        t.equal(decoded.x, decoded.y);
-        t.notEqual(decoded.x, source);
+    StandardObjectTests('BigInt64Array', 'BigInt64Array', () => {
+        return new BigInt64Array(2);
     });
 
     test('BigInt64Array: Encoding Expected', (t) => {

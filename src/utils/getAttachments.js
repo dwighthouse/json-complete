@@ -9,12 +9,21 @@ export default (item, encodeSymbolKeys) => {
     });
 
     // Find all String keys that are not indices
-    // For Arrays, TypedArrays, and Object-Wrapped Strings, the keys list will include indices as strings, so account for that by checking the indexObj
-    let keys = Object.keys(item).filter((key) => {
-        return !indexObj[key];
-    });
+    let keys;
 
-    if (encodeSymbolKeys) {
+    // Prior to ES5, Object.keys will throw if given a primitive type, instead of cooercing them to Object types
+    // IE11 requires this
+    if (item === void 0 || item === null || typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean' || typeof item === 'symbol') {
+        keys = [];
+    }
+    // For Arrays, TypedArrays, and Object-Wrapped Strings, the keys list will include indices as strings, so account for that by checking the indexObj
+    else {
+        keys = Object.keys(item).filter((key) => {
+            return !indexObj[key];
+        });
+    }
+
+    if (encodeSymbolKeys && typeof Symbol === 'function') {
         keys = keys.concat(Object.getOwnPropertySymbols(item).filter((symbol) => {
             // Ignore built-in Symbols
             // If the Symbol ID that is part of the Symbol global is not equal to the tested Symbol, then it is NOT a built-in Symbol

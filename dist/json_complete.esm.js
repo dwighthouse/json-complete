@@ -84,6 +84,14 @@ var findItemKey = (store, item) => {
         }
     }
 
+    if (typeof Set === 'function' && item instanceof Set) {
+        return 'U';
+    }
+
+    if (typeof Map === 'function' && item instanceof Map) {
+        return 'V';
+    }
+
     let systemName = getSystemName(item);
     const wrappedTypeSystemName = store._wrappedTypeMap[systemName];
 
@@ -193,12 +201,21 @@ var getAttachments = (item, encodeSymbolKeys) => {
     });
 
     // Find all String keys that are not indices
-    // For Arrays, TypedArrays, and Object-Wrapped Strings, the keys list will include indices as strings, so account for that by checking the indexObj
-    let keys = Object.keys(item).filter((key) => {
-        return !indexObj[key];
-    });
+    let keys;
 
-    if (encodeSymbolKeys) {
+    // Prior to ES5, Object.keys will throw if given a primitive type, instead of cooercing them to Object types
+    // IE11 requires this
+    if (item === void 0 || item === null || typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean' || typeof item === 'symbol') {
+        keys = [];
+    }
+    // For Arrays, TypedArrays, and Object-Wrapped Strings, the keys list will include indices as strings, so account for that by checking the indexObj
+    else {
+        keys = Object.keys(item).filter((key) => {
+            return !indexObj[key];
+        });
+    }
+
+    if (encodeSymbolKeys && typeof Symbol === 'function') {
         keys = keys.concat(Object.getOwnPropertySymbols(item).filter((symbol) => {
             // Ignore built-in Symbols
             // If the Symbol ID that is part of the Symbol global is not equal to the tested Symbol, then it is NOT a built-in Symbol
@@ -368,7 +385,7 @@ var genPrimitive = (type, compressionType) => {
 };
 
 var BasePrimitiveTypes = (typeObj) => {
-    typeObj.S = genPrimitive(String, 0);
+    typeObj.S = genPrimitive(String);
 
     typeObj.N = genPrimitive(Number, 1);
 
@@ -456,11 +473,8 @@ var BlobTypes = (typeObj) => {
                 type: decodePointer(store, dataArray[1]),
             });
         });
-    }
 
-    // Supported back to IE10, but IE10, IE11, and (so far) Edge do not support the File constructor
-    /* istanbul ignore if */
-    if (typeof File === 'function') {
+        // IE10, but IE10, IE11, and (so far) Edge do not support the File constructor, so they will use the fallback in compat mode
         typeObj.Z = genBlobLike('File', ['type', 'name', 'lastModified'], (store, buffer, dataArray) => {
             try {
                 return new File(buffer, decodePointer(store, dataArray[2]), {
@@ -545,7 +559,6 @@ var ErrorType = (typeObj) => {
 };
 
 var KeyedCollectionTypes = (typeObj) => {
-    // If Set is supported, Map is also supported
     /* istanbul ignore else */
     if (typeof Set === 'function') {
         typeObj.U = {
@@ -570,7 +583,10 @@ var KeyedCollectionTypes = (typeObj) => {
                 attachKeys(store, dataItem, 1, 2);
             },
         };
+    }
 
+    /* istanbul ignore else */
+    if (typeof Map === 'function') {
         typeObj.V = {
             _systemName: 'Map',
             _compressionType: 2,
@@ -1077,7 +1093,9 @@ var decode = (encoded, options) => {
     }
 
     // Having explored all of the data structure, fill out data and references
-    Object.values(store._decoded).forEach((dataItem) => {
+    // IE11 and lower do not support Object.values
+    Object.keys(store._decoded).forEach((key) => {
+        const dataItem = store._decoded[key];
         types$1[dataItem._key]._build(store, dataItem);
     });
 
