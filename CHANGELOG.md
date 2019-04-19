@@ -1,7 +1,8 @@
-## 2.0.0 (February ??th, 2019)
+## 2.0.0 (April ??th, 2019)
 
 * Breaking Change: Completely reworked the encoded data format to greatly increase compression of data. It now rivals the size of the equivalent JSON encoded data, in spite of storing more information.
   - Part of the rework reserves some keys for future use such as custom types and new primitives in JS.
+* Breaking Change: Added Number and BigInt value compression using bit manipulation and custom 6-bit encoding.
 * Created conversion script (`convertTo.js`) that can convert back and forth between 1.0.0 and 2.0.0 json-complete data formats.
 * Added support for BigInt64Array type.
 * Added support for BigUint64Array type.
